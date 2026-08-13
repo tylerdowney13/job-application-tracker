@@ -9,8 +9,28 @@ const mongooseInstance = await connectDB();
 const client = mongooseInstance.connection.getClient();
 const db = client.db();
 
+const getTrustedOrigins = () => {
+  const origins: string[] = [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://127.0.0.1:3000",
+  ];
+
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    origins.push(process.env.NEXT_PUBLIC_APP_URL);
+  }
+
+  // Trust all Vercel preview deployments
+  if (process.env.VERCEL_ENV === "preview" || process.env.VERCEL_URL) {
+    origins.push(`https://${process.env.VERCEL_URL}`);
+  }
+
+  return origins;
+};
+
 export const auth = betterAuth({
   database: mongodbAdapter(db, { client }),
+  trustedOrigins: getTrustedOrigins(),
   session: {
     cookieCache: {
       enabled: true,
